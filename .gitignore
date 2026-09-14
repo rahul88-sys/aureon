@@ -1,4 +1,4 @@
-﻿# Created by Vercel CLI
+# Created by Vercel CLI
 .next
 .vercel
 .env*.local
@@ -10,3 +10,11 @@
 /api/coverage
 node_modules
 *.tsbuildinfo
+
+# Local debug artifacts
+/tmp-*
+/scripts/debug-pdf-text.mjs
+
+# Tesseract local cache (loaded from CDN at runtime)
+eng.traineddata
+*.traineddata

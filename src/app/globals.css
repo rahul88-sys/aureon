@@ -272,6 +272,13 @@ html[data-theme="modern"] select {
   font-family: var(--font-jakarta), system-ui, sans-serif;
 }
 
+/* PDF editor must keep certificate fonts — theme textarea rules must not win */
+textarea.pdf-edit-input {
+  font-family: "Segoe UI", Calibri, Arial, Helvetica, sans-serif !important;
+  font-synthesis: none !important;
+  letter-spacing: normal !important;
+}
+
 html[data-theme="modern"] ::selection {
   background: color-mix(in srgb, var(--ice) 35%, transparent);
   color: #061018;

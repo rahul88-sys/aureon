@@ -10,7 +10,7 @@ import { ToolsNavMenu } from "@/components/layout/ToolsNavMenu";
 import { ThemeMenu } from "@/components/theme/ThemeMenu";
 import { useTheme } from "@/components/theme/ThemeToggle";
 import { Button } from "@/components/ui/Button";
-import { tools } from "@/lib/tools";
+import { readyTools } from "@/lib/tools";
 import { themeCopy } from "@/lib/theme";
 import { nav } from "@/lib/site";
 import { cn } from "@/lib/utils";
@@ -123,7 +123,7 @@ export function Header() {
                         >
                           All tools
                         </Link>
-                        {tools.map((tool) => (
+                        {readyTools().slice(0, 12).map((tool) => (
                           <Link
                             key={tool.slug}
                             href={`/tools/${tool.slug}`}
@@ -132,6 +132,12 @@ export function Header() {
                             {tool.title}
                           </Link>
                         ))}
+                        <Link
+                          href="/tools"
+                          className="block py-2 text-[13px] text-ice hover:underline"
+                        >
+                          View all tools →
+                        </Link>
                       </div>
                     ) : null}
                   </div>

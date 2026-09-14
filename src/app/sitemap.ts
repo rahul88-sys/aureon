@@ -23,10 +23,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
     lastModified: now,
   }));
 
-  const toolRoutes = tools.map((t) => ({
-    url: `${site.url}/tools/${t.slug}`,
-    lastModified: now,
-  }));
+  const toolRoutes = tools
+    .filter((t) => t.status === "ready")
+    .map((t) => ({
+      url: `${site.url}/tools/${t.slug}`,
+      lastModified: now,
+    }));
 
   return [...staticRoutes, ...work, ...toolRoutes];
 }
