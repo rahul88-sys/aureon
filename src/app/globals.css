@@ -228,6 +228,12 @@ body {
   box-shadow: var(--shadow-soft);
 }
 
+.menu-dropdown {
+  border-radius: var(--radius);
+  background: var(--ink-elevated);
+  box-shadow: var(--shadow-soft);
+}
+
 .theme-control {
   border-radius: var(--radius-sm);
 }
@@ -310,6 +316,15 @@ html[data-theme="modern"] .theme-panel {
 html[data-theme="modern"] .theme-panel:hover {
   border-color: rgba(79, 209, 197, 0.28);
   transform: translateY(-2px);
+}
+
+html[data-theme="modern"] .menu-dropdown {
+  background: #0f1724;
+  border-color: rgba(244, 247, 251, 0.14);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  transform: none;
 }
 
 html[data-theme="modern"] h1.display {

@@ -40,7 +40,10 @@ export class AuthController {
 
     const frontend =
       this.config.get<string>('FRONTEND_URL') ?? 'http://localhost:3000';
-    return res.redirect(`${frontend}/auth/callback?ok=1`);
+    // Pass token in the hash so the frontend can store it (cross-port local/dev safe).
+    return res.redirect(
+      `${frontend}/auth/callback#token=${encodeURIComponent(token)}`,
+    );
   }
 
   @Get('me')
