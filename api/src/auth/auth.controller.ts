@@ -7,8 +7,9 @@ import {
   UseGuards,
   UnauthorizedException,
 } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import type { Request, Response } from 'express';
+import { trackApi } from '../analytics';
+import { env } from '../env';
 import { AuthService } from './auth.service';
 import type { AuthUser } from './auth.types';
 import { GoogleAuthGuard } from './guards/google-auth.guard';
@@ -16,20 +17,18 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard';
 
 @Controller('auth')
 export class AuthController {
-  constructor(
-    private readonly auth: AuthService,
-    private readonly config: ConfigService,
-  ) {}
+  constructor(private readonly auth: AuthService) {}
 
   @Get('google')
   @UseGuards(GoogleAuthGuard)
-  googleAuth() {
+  googleAuth(@Req() req: Request) {
+    void trackApi('auth_google_start', req);
     return { ok: true };
   }
 
   @Get('google/callback')
   @UseGuards(GoogleAuthGuard)
-  googleCallback(@Req() req: Request, @Res() res: Response) {
+  async googleCallback(@Req() req: Request, @Res() res: Response) {
     const user = req.user as AuthUser | undefined;
     if (!user) {
       throw new UnauthorizedException('Google sign-in failed');
@@ -37,10 +36,9 @@ export class AuthController {
 
     const token = this.auth.signToken(user);
     res.cookie('aureon_token', token, this.auth.cookieOptions());
+    await trackApi('auth_google_success', req, { provider: 'google' });
 
-    const frontend =
-      this.config.get<string>('FRONTEND_URL') ?? 'http://localhost:3000';
-    // Pass token in the hash so the frontend can store it (cross-port local/dev safe).
+    const frontend = env('FRONTEND_URL', 'http://localhost:3000').split(',')[0];
     return res.redirect(
       `${frontend}/auth/callback#token=${encodeURIComponent(token)}`,
     );
@@ -49,6 +47,7 @@ export class AuthController {
   @Get('me')
   @UseGuards(JwtAuthGuard)
   me(@Req() req: Request) {
+    void trackApi('auth_me', req);
     return {
       ok: true,
       user: req.user,
@@ -56,11 +55,15 @@ export class AuthController {
   }
 
   @Post('logout')
-  logout(@Res({ passthrough: true }) res: Response) {
+  async logout(
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ) {
     res.clearCookie('aureon_token', {
       ...this.auth.cookieOptions(),
       maxAge: 0,
     });
+    await trackApi('auth_logout', req);
     return { ok: true };
   }
 }

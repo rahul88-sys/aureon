@@ -1,6 +1,6 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
+import { env } from '../env';
 import type { AuthUser, GoogleProfile } from './auth.types';
 import { UsersService } from './users.service';
 
@@ -16,7 +16,6 @@ export class AuthService {
   constructor(
     private readonly users: UsersService,
     private readonly jwt: JwtService,
-    private readonly config: ConfigService,
   ) {}
 
   validateGoogleUser(profile: GoogleProfile): AuthUser {
@@ -52,7 +51,7 @@ export class AuthService {
   }
 
   cookieOptions() {
-    const isProd = this.config.get('NODE_ENV') === 'production';
+    const isProd = env('NODE_ENV') === 'production';
     return {
       httpOnly: true,
       secure: isProd,

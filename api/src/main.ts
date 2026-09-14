@@ -1,14 +1,11 @@
 import { NestFactory } from '@nestjs/core';
-import { ConfigService } from '@nestjs/config';
 import cookieParser from 'cookie-parser';
 import { AppModule } from './app.module';
+import { env } from './env';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  const config = app.get(ConfigService);
-
-  const frontendUrl =
-    config.get<string>('FRONTEND_URL') ?? 'http://localhost:3000';
+  const frontendUrl = env('FRONTEND_URL', 'http://localhost:3000');
 
   app.use(cookieParser());
   app.enableCors({
@@ -17,10 +14,9 @@ async function bootstrap() {
     allowedHeaders: ['Authorization', 'Content-Type', 'Accept'],
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   });
-
   app.setGlobalPrefix('api');
 
-  const port = Number(config.get('PORT') ?? 4000);
+  const port = Number(process.env.PORT ?? env('PORT', '4000'));
   await app.listen(port);
   console.log(`Aureon API listening on http://localhost:${port}/api/health`);
 }
