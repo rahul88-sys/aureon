@@ -1,4 +1,3 @@
-﻿# NestJS lives in /api — do not upload as Vercel serverless functions
-api
-api/**
+﻿# NestJS backend only (leading / = repo root; bare "api" also matched src/lib/api.ts)
+/api/
 *.tsbuildinfo
