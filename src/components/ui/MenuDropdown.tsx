@@ -10,7 +10,7 @@ import {
 import { createPortal } from "react-dom";
 import { cn } from "@/lib/utils";
 
-type Coords = { top: number; right: number };
+type Coords = { top: number; left?: number; right?: number };
 
 export function MenuDropdown({
   open,
@@ -19,6 +19,7 @@ export function MenuDropdown({
   children,
   className,
   widthClass = "w-56",
+  align = "right",
 }: {
   open: boolean;
   onClose: () => void;
@@ -26,6 +27,7 @@ export function MenuDropdown({
   children: ReactNode;
   className?: string;
   widthClass?: string;
+  align?: "left" | "right";
 }) {
   const rootRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -46,10 +48,17 @@ export function MenuDropdown({
       const el = rootRef.current;
       if (!el) return;
       const r = el.getBoundingClientRect();
-      setCoords({
-        top: r.bottom + 8,
-        right: Math.max(8, window.innerWidth - r.right),
-      });
+      if (align === "left") {
+        setCoords({
+          top: r.bottom + 8,
+          left: Math.max(8, r.left),
+        });
+      } else {
+        setCoords({
+          top: r.bottom + 8,
+          right: Math.max(8, window.innerWidth - r.right),
+        });
+      }
     };
 
     update();
@@ -59,7 +68,7 @@ export function MenuDropdown({
       window.removeEventListener("resize", update);
       window.removeEventListener("scroll", update, true);
     };
-  }, [open]);
+  }, [open, align]);
 
   useEffect(() => {
     if (!open) return;
@@ -91,7 +100,11 @@ export function MenuDropdown({
                 "menu-dropdown fixed z-[300] overflow-hidden border border-line p-1.5 shadow-[0_24px_60px_rgba(0,0,0,0.55)]",
                 widthClass,
               )}
-              style={{ top: coords.top, right: coords.right }}
+              style={{
+                top: coords.top,
+                left: coords.left,
+                right: coords.right,
+              }}
             >
               {children}
             </div>,

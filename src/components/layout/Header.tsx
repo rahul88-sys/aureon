@@ -1,14 +1,16 @@
 "use client";
 
-import { Menu, X } from "lucide-react";
+import { ChevronDown, Menu, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Logo } from "@/components/brand/Logo";
 import { AuthButton } from "@/components/auth/AuthButton";
+import { ToolsNavMenu } from "@/components/layout/ToolsNavMenu";
 import { ThemeMenu } from "@/components/theme/ThemeMenu";
 import { useTheme } from "@/components/theme/ThemeToggle";
 import { Button } from "@/components/ui/Button";
+import { tools } from "@/lib/tools";
 import { themeCopy } from "@/lib/theme";
 import { nav } from "@/lib/site";
 import { cn } from "@/lib/utils";
@@ -18,6 +20,7 @@ export function Header() {
   const theme = useTheme();
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
+  const [toolsOpen, setToolsOpen] = useState(false);
   const copy = themeCopy[theme];
 
   useEffect(() => {
@@ -29,6 +32,7 @@ export function Header() {
 
   useEffect(() => {
     setOpen(false);
+    setToolsOpen(false);
   }, [pathname]);
 
   useEffect(() => {
@@ -54,6 +58,9 @@ export function Header() {
         <Logo />
         <nav className="hidden items-center gap-7 md:flex">
           {nav.map((item) => {
+            if (item.href === "/tools") {
+              return <ToolsNavMenu key={item.href} />;
+            }
             const active =
               pathname === item.href || pathname.startsWith(`${item.href}/`);
             return (
@@ -90,15 +97,56 @@ export function Header() {
       {open ? (
         <div className="border-t border-line bg-ink px-5 py-8 md:hidden">
           <nav className="flex flex-col">
-            {nav.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className="border-b border-line py-3 ui-label text-cream-dim hover:text-ice"
-              >
-                {item.label}
-              </Link>
-            ))}
+            {nav.map((item) => {
+              if (item.href === "/tools") {
+                return (
+                  <div key={item.href} className="border-b border-line">
+                    <button
+                      type="button"
+                      className="flex w-full items-center justify-between py-3 ui-label text-cream-dim hover:text-ice"
+                      onClick={() => setToolsOpen((v) => !v)}
+                    >
+                      Tools
+                      <ChevronDown
+                        size={16}
+                        className={cn(
+                          "transition",
+                          toolsOpen && "rotate-180 text-ice",
+                        )}
+                      />
+                    </button>
+                    {toolsOpen ? (
+                      <div className="pb-3 pl-3">
+                        <Link
+                          href="/tools"
+                          className="block py-2 text-[13px] text-muted hover:text-ice"
+                        >
+                          All tools
+                        </Link>
+                        {tools.map((tool) => (
+                          <Link
+                            key={tool.slug}
+                            href={`/tools/${tool.slug}`}
+                            className="block py-2 text-[13px] text-cream-dim hover:text-ice"
+                          >
+                            {tool.title}
+                          </Link>
+                        ))}
+                      </div>
+                    ) : null}
+                  </div>
+                );
+              }
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className="border-b border-line py-3 ui-label text-cream-dim hover:text-ice"
+                >
+                  {item.label}
+                </Link>
+              );
+            })}
             <div className="mt-5 flex flex-wrap items-center gap-2">
               <Button href="/contact">{copy.start}</Button>
               <ThemeMenu />
