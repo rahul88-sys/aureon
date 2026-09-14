@@ -6,7 +6,7 @@ import { principles, stats } from "@/lib/site";
 export const metadata: Metadata = {
   title: "Studio",
   description:
-    "Aureon is an independent software engineering studio in Bengaluru, working with companies worldwide.",
+    "Aureon is an independent software engineering studio in Pune, working with companies worldwide.",
 };
 
 export default function AboutPage() {
@@ -23,7 +23,7 @@ export default function AboutPage() {
           <h2 className="display text-2xl text-cream sm:text-3xl">How we are built</h2>
           <div className="mt-6 space-y-5 text-[16px] leading-8 text-muted">
             <p>
-              We are independent, based in Bengaluru, and work with teams across
+              We are independent, based in Pune, and work with teams across
               India, the Gulf, Europe and North America. Engagements are led by
               senior engineers and designers — the same people on the kickoff
               call and in the repository.

@@ -8,7 +8,7 @@ export function AboutPreview() {
         <Reveal className="lg:col-span-6">
           <p className="ui-label text-ice">SYS // studio</p>
           <h2 className="display mt-4 text-3xl text-cream sm:text-4xl lg:text-[2.75rem] lg:leading-[1.05]">
-            Independent. Senior. Bengaluru / worldwide.
+            Independent. Senior. Pune / worldwide.
           </h2>
         </Reveal>
         <Reveal delay={0.1} className="lg:col-span-6">

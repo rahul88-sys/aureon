@@ -53,7 +53,7 @@ export const metadata: Metadata = {
     "custom software",
     "AI chatbot",
     "AI assistants",
-    "Bengaluru",
+    "Pune",
     "Aureon",
   ],
   authors: [{ name: site.legal }],
