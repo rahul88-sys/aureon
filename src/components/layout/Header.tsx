@@ -5,11 +5,13 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Logo } from "@/components/brand/Logo";
+import { AuthButton } from "@/components/auth/AuthButton";
 import { ThemeToggle, useTheme } from "@/components/theme/ThemeToggle";
 import { Button } from "@/components/ui/Button";
 import { themeCopy } from "@/lib/theme";
 import { nav } from "@/lib/site";
 import { cn } from "@/lib/utils";
+import { googleLoginUrl } from "@/lib/api";
 
 export function Header() {
   const pathname = usePathname();
@@ -67,6 +69,7 @@ export function Header() {
           })}
         </nav>
         <div className="flex items-center gap-2">
+          <AuthButton />
           <ThemeToggle className="hidden sm:inline-flex" />
           <div className="hidden md:block">
             <Button href="/contact">{copy.start}</Button>
@@ -95,6 +98,12 @@ export function Header() {
               </Link>
             ))}
             <div className="mt-5 flex flex-wrap gap-2">
+              <a
+                href={googleLoginUrl()}
+                className="theme-control border border-line px-3 py-2 ui-label text-muted hover:border-ice hover:text-ice"
+              >
+                Google sign-in
+              </a>
               <ThemeToggle />
               <Button href="/contact">{copy.start}</Button>
             </div>
