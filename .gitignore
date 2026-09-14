@@ -1,4 +1,4 @@
-# Created by Vercel CLI
+﻿# Created by Vercel CLI
 .next
 .vercel
 .env*.local
@@ -9,5 +9,4 @@
 /api/node_modules
 /api/coverage
 node_modules
-
 *.tsbuildinfo

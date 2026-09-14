@@ -1,0 +1,4 @@
+﻿# NestJS lives in /api — do not upload as Vercel serverless functions
+api
+api/**
+*.tsbuildinfo
