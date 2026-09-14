@@ -1,0 +1,9 @@
+# Keep local/secrets out of API deploys
+.vercel
+.env
+.env.*
+!.env.example
+dist
+node_modules
+coverage
+*.log
