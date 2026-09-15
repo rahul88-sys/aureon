@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import {
   applyTheme,
+  DEFAULT_THEME,
   getStoredTheme,
   themeCopy,
   type Theme,
@@ -10,7 +11,7 @@ import {
 import { cn } from "@/lib/utils";
 
 export function ThemeToggle({ className }: { className?: string }) {
-  const [theme, setTheme] = useState<Theme>("signal");
+  const [theme, setTheme] = useState<Theme>(DEFAULT_THEME);
 
   useEffect(() => {
     setTheme(getStoredTheme());
@@ -33,6 +34,9 @@ export function ThemeToggle({ className }: { className?: string }) {
       onClick={() => {
         applyTheme(next);
         setTheme(next);
+        void import("@/lib/api").then(({ saveThemePreference }) =>
+          saveThemePreference(next),
+        );
       }}
     >
       <span
@@ -47,7 +51,7 @@ export function ThemeToggle({ className }: { className?: string }) {
 }
 
 export function useTheme(): Theme {
-  const [theme, setTheme] = useState<Theme>("signal");
+  const [theme, setTheme] = useState<Theme>(DEFAULT_THEME);
 
   useEffect(() => {
     setTheme(getStoredTheme());

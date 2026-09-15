@@ -81,7 +81,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      data-theme="signal"
+      data-theme="modern"
       className={`${outfit.variable} ${geistMono.variable} ${jakarta.variable} ${sora.variable} h-full antialiased`}
       suppressHydrationWarning
     >

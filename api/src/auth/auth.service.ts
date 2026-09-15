@@ -1,7 +1,12 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { env } from '../env';
-import type { AuthUser, GoogleProfile } from './auth.types';
+import type {
+  AuthUser,
+  GoogleProfile,
+  MicrosoftProfile,
+  ThemePreference,
+} from './auth.types';
 import { UsersService } from './users.service';
 
 export type JwtPayload = {
@@ -9,6 +14,8 @@ export type JwtPayload = {
   email: string;
   name: string;
   picture?: string;
+  provider: 'google' | 'microsoft';
+  theme: ThemePreference;
 };
 
 @Injectable()
@@ -18,8 +25,12 @@ export class AuthService {
     private readonly jwt: JwtService,
   ) {}
 
-  validateGoogleUser(profile: GoogleProfile): AuthUser {
+  validateGoogleUser(profile: GoogleProfile): Promise<AuthUser> {
     return this.users.upsertFromGoogle(profile);
+  }
+
+  validateMicrosoftUser(profile: MicrosoftProfile): Promise<AuthUser> {
+    return this.users.upsertFromMicrosoft(profile);
   }
 
   signToken(user: AuthUser): string {
@@ -28,26 +39,32 @@ export class AuthService {
       email: user.email,
       name: user.name,
       picture: user.picture,
+      provider: user.provider,
+      theme: user.theme || 'modern',
     };
     return this.jwt.sign(payload);
   }
 
-  userFromPayload(payload: JwtPayload): AuthUser {
+  async userFromPayload(payload: JwtPayload): Promise<AuthUser> {
     if (!payload?.sub || !payload.email) {
       throw new UnauthorizedException('Invalid token');
     }
 
-    const cached = this.users.findById(payload.sub);
+    const cached = await this.users.findById(payload.sub);
     if (cached) return cached;
 
-    const user: AuthUser = {
+    return {
       id: payload.sub,
       email: payload.email,
       name: payload.name,
       picture: payload.picture,
-      provider: 'google',
+      provider: payload.provider === 'microsoft' ? 'microsoft' : 'google',
+      theme: payload.theme === 'signal' ? 'signal' : 'modern',
     };
-    return user;
+  }
+
+  updateTheme(userId: string, theme: ThemePreference) {
+    return this.users.updateTheme(userId, theme);
   }
 
   cookieOptions() {

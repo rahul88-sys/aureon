@@ -4,11 +4,13 @@ import { useCallback, useEffect, useState } from "react";
 import { Check, ChevronDown, Palette } from "lucide-react";
 import {
   applyTheme,
+  DEFAULT_THEME,
   getStoredTheme,
   type Theme,
 } from "@/lib/theme";
 import { useTheme } from "@/components/theme/ThemeToggle";
 import { MenuDropdown } from "@/components/ui/MenuDropdown";
+import { saveThemePreference } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
 const options: { id: Theme; label: string; hint: string }[] = [
@@ -19,7 +21,7 @@ const options: { id: Theme; label: string; hint: string }[] = [
 export function ThemeMenu({ className }: { className?: string }) {
   const theme = useTheme();
   const [open, setOpen] = useState(false);
-  const [current, setCurrent] = useState<Theme>("signal");
+  const [current, setCurrent] = useState<Theme>(DEFAULT_THEME);
   const close = useCallback(() => setOpen(false), []);
 
   useEffect(() => {
@@ -72,6 +74,7 @@ export function ThemeMenu({ className }: { className?: string }) {
               applyTheme(option.id);
               setCurrent(option.id);
               setOpen(false);
+              void saveThemePreference(option.id);
             }}
           >
             <span

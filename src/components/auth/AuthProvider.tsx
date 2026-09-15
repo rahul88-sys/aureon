@@ -15,6 +15,7 @@ import {
   userFromToken,
   type SessionUser,
 } from "@/lib/api";
+import { applyTheme, isTheme } from "@/lib/theme";
 
 type AuthContextValue = {
   user: SessionUser | null;
@@ -24,6 +25,12 @@ type AuthContextValue = {
 };
 
 const AuthContext = createContext<AuthContextValue | null>(null);
+
+function syncThemeFromUser(user: SessionUser | null) {
+  if (user?.theme && isTheme(user.theme)) {
+    applyTheme(user.theme);
+  }
+}
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -36,12 +43,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const local = userFromToken(token);
       if (local) {
         setUser(local);
+        syncThemeFromUser(local);
         setLoading(false);
       }
     }
 
     const session = await fetchSession();
     setUser(session);
+    syncThemeFromUser(session);
     setLoading(false);
   }, []);
 

@@ -24,9 +24,6 @@ uvicorn app.main:app --reload --port 8000
 | `OCR_ENGINE=tesseract` | Medium OCR when installed |
 | `ENABLE_HEAVY_OCR=1` + `requirements-heavy.txt` | PaddleOCR on Railway/etc. |
 
-## Vercel
+## Observability
 
-Create a **new** Vercel project with Root Directory = `python`.  
-Set env: `JWT_SECRET`, `BLOB_READ_WRITE_TOKEN`, `BLOB_STORE_ID`, `CORS_ORIGINS`.
-
-Move later: point Nest `PDF_SERVICE_URL` at the new host — same API contract.
+`GET /` and `GET /observability` serve an HTML shell that loads Vercel Analytics + Speed Insights scripts (same pattern as Nest API).

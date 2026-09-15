@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { getStoredToken, setStoredToken, userFromToken } from "@/lib/api";
+import { applyTheme, isTheme } from "@/lib/theme";
 
 function readTokenFromUrl(): string | null {
   if (typeof window === "undefined") return null;
@@ -36,7 +37,12 @@ export default function AuthCallbackPage() {
 
     const localUser = userFromToken(token);
     setStoredToken(token);
-    if (localUser) setUser(localUser);
+    if (localUser) {
+      setUser(localUser);
+      if (localUser.theme && isTheme(localUser.theme)) {
+        applyTheme(localUser.theme);
+      }
+    }
     setStatus("ok");
     void refresh();
 

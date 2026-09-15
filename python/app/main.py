@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse
 
 from app.api.routes import router
 from app.core.config import get_settings
@@ -25,12 +26,30 @@ app.add_middleware(
 
 app.include_router(router)
 
+OBSERVABILITY_HTML = """<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Aureon PDF</title>
+    <script defer src="/_vercel/insights/script.js"></script>
+    <script defer src="/_vercel/speed-insights/script.js"></script>
+  </head>
+  <body style="font-family:system-ui;background:#070b12;color:#f4f7fb;padding:2rem">
+    <h1>Aureon PDF Service</h1>
+    <p>Health: <a href="/health" style="color:#4fd1c5">/health</a></p>
+    <p>Docs: <a href="/docs" style="color:#4fd1c5">/docs</a></p>
+    <p>Analytics + Speed Insights are enabled for this deployment.</p>
+  </body>
+</html>
+"""
 
-@app.get("/")
+
+@app.get("/", response_class=HTMLResponse)
 def root():
-    return {
-        "ok": True,
-        "service": "aureon-pdf",
-        "docs": "/docs",
-        "health": "/health",
-    }
+    return OBSERVABILITY_HTML
+
+
+@app.get("/observability", response_class=HTMLResponse)
+def observability():
+    return OBSERVABILITY_HTML
