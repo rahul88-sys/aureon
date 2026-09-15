@@ -1,6 +1,7 @@
+/** Prefer same-origin `/nest-api` rewrite in production to avoid CORS-cancelled auth calls. */
 export const apiBaseUrl =
   process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") ||
-  "http://localhost:4000/api";
+  (typeof window !== "undefined" ? "/nest-api" : "http://localhost:4000/api");
 
 export const AUTH_TOKEN_KEY = "aureon_token";
 

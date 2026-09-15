@@ -14,6 +14,14 @@ export class HealthController {
       analytics: true,
       speedInsights: true,
       time: new Date().toISOString(),
+      config: {
+        frontend: Boolean(process.env.FRONTEND_URL),
+        google: Boolean(process.env.GOOGLE_CLIENT_ID),
+        jwt: Boolean(process.env.JWT_SECRET),
+        database: Boolean(process.env.DATABASE_URL),
+        blob: Boolean(process.env.BLOB_READ_WRITE_TOKEN),
+        pdf: Boolean(process.env.PDF_SERVICE_URL),
+      },
     };
   }
 

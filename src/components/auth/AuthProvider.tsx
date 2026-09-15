@@ -6,9 +6,9 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
-import { usePathname } from "next/navigation";
 import {
   fetchSession,
   getStoredToken,
@@ -33,11 +33,12 @@ function syncThemeFromUser(user: SessionUser | null) {
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname();
   const [user, setUser] = useState<SessionUser | null>(null);
   const [loading, setLoading] = useState(true);
+  const refreshSeq = useRef(0);
 
   const refresh = useCallback(async () => {
+    const seq = ++refreshSeq.current;
     const token = getStoredToken();
     if (token) {
       const local = userFromToken(token);
@@ -46,9 +47,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         syncThemeFromUser(local);
         setLoading(false);
       }
+    } else {
+      if (seq === refreshSeq.current) {
+        setUser(null);
+        setLoading(false);
+      }
+      return;
     }
 
     const session = await fetchSession();
+    if (seq !== refreshSeq.current) return;
     setUser(session);
     syncThemeFromUser(session);
     setLoading(false);
@@ -61,17 +69,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
     window.addEventListener("aureon-auth", onAuth);
     window.addEventListener("storage", onAuth);
-    window.addEventListener("focus", onAuth);
     return () => {
       window.removeEventListener("aureon-auth", onAuth);
       window.removeEventListener("storage", onAuth);
-      window.removeEventListener("focus", onAuth);
     };
   }, [refresh]);
-
-  useEffect(() => {
-    void refresh();
-  }, [pathname, refresh]);
 
   const value = useMemo(
     () => ({ user, loading, refresh, setUser }),
