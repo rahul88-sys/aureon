@@ -11,11 +11,13 @@ import {
   type TextEdit,
   renderPdfPages,
 } from "@/lib/pdf-ops";
+import { parsePdfViaApi } from "@/lib/pdf-api";
 import {
   ProcessSteps,
   type ProcessStep,
 } from "@/components/tools/ProcessSteps";
 import { EditorToolbar } from "@/components/tools/EditorToolbar";
+import { ReplaceTextModal } from "@/components/tools/ReplaceTextModal";
 import { cn } from "@/lib/utils";
 
 type Mode = "select" | "text" | "draw" | "sign" | "image";
@@ -384,9 +386,37 @@ export function PdfEditorWorkspace({
 
       markStep("parse", "Checking for a native text layer…");
       let usedOcr = false;
-      const { runs, source } = await extractOrOcrPdfTextRuns(
-        next,
-        (msg, step) => {
+      let runs: ParsedTextRun[] = [];
+      let source: "text-layer" | "ocr" | "none" = "none";
+
+      // Prefer Nest → Blob → Python when the user is signed in
+      try {
+        markStep("parse", "Uploading to secure parse service…");
+        const remote = await parsePdfViaApi(next);
+        if (remote && remote.runs.length > 0) {
+          runs = remote.runs;
+          source = remote.source;
+          usedOcr = remote.source === "ocr";
+          setStatus(
+            remote.message ||
+              `Parsed via ${remote.engine} (${remote.runs.length} blocks).`,
+          );
+        } else if (remote && remote.needsOcr) {
+          setStatus(
+            remote.message ||
+              "Server found no text layer — falling back to browser OCR…",
+          );
+        }
+      } catch (e) {
+        setStatus(
+          e instanceof Error
+            ? `Server parse unavailable (${e.message}). Using browser…`
+            : "Server parse unavailable. Using browser…",
+        );
+      }
+
+      if (!runs.length) {
+        const local = await extractOrOcrPdfTextRuns(next, (msg, step) => {
           if (step === "ocr") {
             usedOcr = true;
             markStep("ocr", msg);
@@ -396,8 +426,10 @@ export function PdfEditorWorkspace({
             setStepDetail(msg);
           }
           setStatus(msg);
-        },
-      );
+        });
+        runs = local.runs;
+        source = local.source;
+      }
       completeStep("parse");
       if (usedOcr || source === "ocr") completeStep("ocr");
       else {
@@ -424,11 +456,11 @@ export function PdfEditorWorkspace({
 
       if (source === "ocr") {
         setStatus(
-          `OCR found ${runs.length} text block${runs.length === 1 ? "" : "s"}. Click highlighted text to edit.`,
+          `OCR found ${runs.length} text block${runs.length === 1 ? "" : "s"}. Click highlighted text to replace.`,
         );
       } else if (source === "text-layer") {
         setStatus(
-          `Parsed ${runs.length} text block${runs.length === 1 ? "" : "s"}. Click highlighted text to edit.`,
+          `Parsed ${runs.length} text block${runs.length === 1 ? "" : "s"}. Click highlighted text to replace.`,
         );
       } else if (initialMode === "edit") {
         setError(
@@ -957,27 +989,7 @@ export function PdfEditorWorkspace({
                       height: `${Math.max(run.h * 100, 1.2)}%`,
                     }}
                   >
-                    {active ? (
-                      <ActiveTextField
-                        run={run}
-                        onChange={(value) => {
-                          setTextRuns((prev) =>
-                            prev.map((r) =>
-                              r.id === run.id
-                                ? {
-                                    ...r,
-                                    text: value,
-                                    dirty: value !== r.original,
-                                  }
-                                : r,
-                            ),
-                          );
-                        }}
-                        onBlur={() => {
-                          /* keep selection until click elsewhere */
-                        }}
-                      />
-                    ) : run.dirty ? (
+                    {run.dirty ? (
                       <div className="absolute inset-0 z-[5]">
                         {/* Oversized solid cover — glyphs stick out of OCR boxes */}
                         <div
@@ -993,19 +1005,23 @@ export function PdfEditorWorkspace({
                           <FittedTextPreview run={run} />
                         </div>
                       </div>
-                    ) : (
-                      <button
-                        type="button"
-                        title={`Edit: ${run.original}`}
-                        className="absolute inset-0 cursor-text bg-sky-400/20 ring-1 ring-sky-400/40 transition hover:bg-sky-400/30"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setSelectedId(null);
-                          pushHistory();
-                          setActiveRunId(run.id);
-                        }}
-                      />
-                    )}
+                    ) : null}
+                    <button
+                      type="button"
+                      title={`Replace: ${run.original}`}
+                      className={cn(
+                        "absolute inset-0 cursor-pointer transition",
+                        active
+                          ? "bg-ice/25 ring-2 ring-ice"
+                          : "bg-sky-400/20 ring-1 ring-sky-400/40 hover:bg-sky-400/30",
+                        run.dirty && "bg-transparent ring-0 hover:bg-sky-400/10",
+                      )}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedId(null);
+                        setActiveRunId(run.id);
+                      }}
+                    />
                   </div>
                 );
               })}
@@ -1072,90 +1088,34 @@ export function PdfEditorWorkspace({
             Open a PDF to {initialMode === "sign" ? "sign" : "edit"}
           </span>
           <span className="text-[12px] text-muted">
-            Files stay in your browser — nothing is uploaded.
+            Sign in for server OCR (Blob + Python). Otherwise parsing stays in
+            your browser.
           </span>
         </button>
       ) : null}
-    </div>
-  );
-}
 
-function ActiveTextField({
-  run,
-  onChange,
-  onBlur,
-}: {
-  run: EditableRun;
-  onChange: (value: string) => void;
-  onBlur?: () => void;
-}) {
-  const boxRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLTextAreaElement>(null);
-  const [fontPx, setFontPx] = useState(18);
-  const type = editTypeForRun(run);
-
-  useEffect(() => {
-    const el = boxRef.current;
-    if (!el) return;
-    const apply = () => {
-      const h = el.clientHeight || 24;
-      // Size from the OCR run box — NOT the oversized white mask
-      setFontPx(Math.max(11, Math.round(h * type.sizeFactor)));
-    };
-    apply();
-    const ro = new ResizeObserver(apply);
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, [type.sizeFactor]);
-
-  useEffect(() => {
-    inputRef.current?.focus();
-    const len = run.text.length;
-    try {
-      inputRef.current?.setSelectionRange(len, len);
-    } catch {
-      /* ignore */
-    }
-  }, [run.id]);
-
-  return (
-    <div
-      className="absolute inset-0 z-20"
-      onClick={(e) => e.stopPropagation()}
-    >
-      {/* Solid cover taller/wider than OCR — kills ghost glyphs */}
-      <div
-        className="pointer-events-none absolute bg-white ring-2 ring-ice shadow-[0_8px_24px_rgba(0,0,0,0.18)]"
-        style={{
-          top: "-35%",
-          left: "-5%",
-          width: "110%",
-          height: "170%",
-        }}
-      />
-      <div ref={boxRef} className="absolute inset-0 overflow-hidden">
-        <textarea
-          ref={inputRef}
-          value={run.text}
-          spellCheck={false}
-          onBlur={onBlur}
-          onChange={(e) => onChange(e.target.value)}
-          className="pdf-edit-input h-full w-full resize-none border-0 bg-transparent outline-none"
-          style={{
-            color: run.color || "#1a1a1a",
-            caretColor: "#111111",
-            fontFamily: type.fontFamily,
-            fontWeight: type.fontWeight,
-            fontSize: `${fontPx}px`,
-            lineHeight: 1.05,
-            letterSpacing: "normal",
-            padding: "0 2px",
-            fontVariantLigatures: "none",
-            fontSynthesis: "none",
-            WebkitTextFillColor: run.color || "#1a1a1a",
+      {activeRun && initialMode === "edit" && tool === "select" ? (
+        <ReplaceTextModal
+          selected={activeRun.original}
+          initialReplacement={activeRun.text}
+          onClose={() => setActiveRunId(null)}
+          onApply={(replacement) => {
+            pushHistory();
+            setTextRuns((prev) =>
+              prev.map((r) =>
+                r.id === activeRun.id
+                  ? {
+                      ...r,
+                      text: replacement,
+                      dirty: replacement !== r.original,
+                    }
+                  : r,
+              ),
+            );
+            setActiveRunId(null);
           }}
         />
-      </div>
+      ) : null}
     </div>
   );
 }

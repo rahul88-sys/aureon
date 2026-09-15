@@ -11,6 +11,12 @@
 node_modules
 *.tsbuildinfo
 
+# Python PDF service (local secrets + venv)
+/python/.env
+/python/.venv/
+/python/**/__pycache__/
+/python/**/*.pyc
+
 # Local debug artifacts
 /tmp-*
 /scripts/debug-pdf-text.mjs
