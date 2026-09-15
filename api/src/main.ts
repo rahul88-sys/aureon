@@ -6,12 +6,32 @@ import { env } from './env';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const frontendUrl = env('FRONTEND_URL', 'http://localhost:3000');
+  const allowed = frontendUrl.split(',').map((v) => v.trim()).filter(Boolean);
 
   app.use(cookieParser());
   app.enableCors({
-    origin: frontendUrl.split(',').map((v) => v.trim()),
+    origin: (
+      origin: string | undefined,
+      callback: (err: Error | null, allow?: boolean) => void,
+    ) => {
+      if (
+        !origin ||
+        allowed.includes(origin) ||
+        /\.vercel\.app$/i.test(origin)
+      ) {
+        callback(null, true);
+        return;
+      }
+      callback(null, false);
+    },
     credentials: true,
-    allowedHeaders: ['Authorization', 'Content-Type', 'Accept'],
+    allowedHeaders: [
+      'Authorization',
+      'Content-Type',
+      'Accept',
+      'Origin',
+      'X-Requested-With',
+    ],
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   });
   app.setGlobalPrefix('api');

@@ -75,7 +75,7 @@ export class PdfService {
     const pathname = `pdf/${userId}/${Date.now()}-${safeName}`;
 
     const blob = await put(pathname, file.buffer, {
-      access: 'public',
+      access: 'private',
       token,
       contentType: 'application/pdf',
       addRandomSuffix: true,

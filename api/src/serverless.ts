@@ -8,21 +8,57 @@ import { env } from './env';
 
 let cached: Express | null = null;
 
+function corsOriginDelegate(origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) {
+  const allowed = env('FRONTEND_URL', 'http://localhost:3000')
+    .split(',')
+    .map((v) => v.trim())
+    .filter(Boolean);
+  if (!origin) {
+    callback(null, true);
+    return;
+  }
+  if (allowed.includes(origin) || /\.vercel\.app$/i.test(origin)) {
+    callback(null, true);
+    return;
+  }
+  callback(null, false);
+}
+
 async function createExpressApp(): Promise<Express> {
   if (cached) return cached;
 
   const server = express();
+  // Keep Nest body parser off so multer can read multipart uploads on Vercel
   const app = await NestFactory.create(AppModule, new ExpressAdapter(server), {
-    bodyParser: true,
+    bodyParser: false,
   });
 
-  const frontendUrl = env('FRONTEND_URL', 'http://localhost:3000');
-
   app.use(cookieParser());
+  // JSON for non-multipart routes only
+  app.use(
+    (
+      req: express.Request,
+      res: express.Response,
+      next: express.NextFunction,
+    ) => {
+      const type = req.headers['content-type'] || '';
+      if (typeof type === 'string' && type.includes('multipart/form-data')) {
+        next();
+        return;
+      }
+      return express.json({ limit: '2mb' })(req, res, next);
+    },
+  );
   app.enableCors({
-    origin: frontendUrl.split(',').map((v) => v.trim()),
+    origin: corsOriginDelegate,
     credentials: true,
-    allowedHeaders: ['Authorization', 'Content-Type', 'Accept'],
+    allowedHeaders: [
+      'Authorization',
+      'Content-Type',
+      'Accept',
+      'Origin',
+      'X-Requested-With',
+    ],
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   });
   app.setGlobalPrefix('api');
