@@ -9,7 +9,7 @@ export type SessionUser = {
   email: string;
   name: string;
   picture?: string;
-  provider: "google" | "microsoft";
+  provider: "google";
   theme?: "signal" | "modern";
 };
 
@@ -59,7 +59,7 @@ export function userFromToken(token: string): SessionUser | null {
       email: payload.email,
       name: payload.name || payload.email,
       picture: payload.picture,
-      provider: payload.provider === "microsoft" ? "microsoft" : "google",
+      provider: "google",
       theme: payload.theme === "signal" ? "signal" : "modern",
     };
   } catch {
@@ -100,10 +100,6 @@ export async function fetchSession(): Promise<SessionUser | null> {
 
 export function googleLoginUrl() {
   return `${apiBaseUrl}/auth/google`;
-}
-
-export function microsoftLoginUrl() {
-  return `${apiBaseUrl}/auth/microsoft`;
 }
 
 export async function saveThemePreference(theme: "signal" | "modern") {

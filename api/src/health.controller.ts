@@ -10,7 +10,7 @@ export class HealthController {
     return {
       ok: true,
       service: 'aureon-api',
-      auth: 'google + microsoft oauth + jwt',
+      auth: 'google-oauth + jwt',
       analytics: true,
       speedInsights: true,
       time: new Date().toISOString(),

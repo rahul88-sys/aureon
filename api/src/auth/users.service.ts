@@ -6,12 +6,7 @@ import {
   type DbUser,
   type ThemePreference,
 } from '../db';
-import type {
-  AuthProvider,
-  AuthUser,
-  GoogleProfile,
-  MicrosoftProfile,
-} from './auth.types';
+import type { AuthProvider, AuthUser, GoogleProfile } from './auth.types';
 
 function toAuthUser(row: DbUser): AuthUser {
   return {
@@ -19,7 +14,7 @@ function toAuthUser(row: DbUser): AuthUser {
     email: row.email,
     name: row.name,
     picture: row.picture || undefined,
-    provider: row.provider,
+    provider: 'google',
     theme: row.theme === 'signal' ? 'signal' : 'modern',
   };
 }
@@ -66,7 +61,7 @@ export class UsersService implements OnModuleInit {
         email,
         name,
         picture: picture || undefined,
-        provider: input.provider,
+        provider: 'google',
         theme: existing?.theme ?? 'modern',
       };
       this.memory.set(email, user);
@@ -115,29 +110,6 @@ export class UsersService implements OnModuleInit {
       email,
       name: profile.displayName ?? email.split('@')[0],
       picture: profile.photos?.[0]?.value,
-    });
-  }
-
-  upsertFromMicrosoft(profile: MicrosoftProfile): Promise<AuthUser> {
-    const email =
-      profile.emails?.[0]?.value ||
-      profile._json?.mail ||
-      profile._json?.userPrincipalName ||
-      profile.userPrincipalName;
-    if (!email) {
-      return Promise.reject(
-        new Error('Microsoft account did not return an email.'),
-      );
-    }
-    return this.upsertOAuth({
-      provider: 'microsoft',
-      providerSub: profile.id,
-      email,
-      name:
-        profile.displayName ||
-        profile._json?.displayName ||
-        email.split('@')[0],
-      picture: undefined,
     });
   }
 

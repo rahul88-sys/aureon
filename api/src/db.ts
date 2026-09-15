@@ -8,7 +8,7 @@ export type DbUser = {
   email: string;
   name: string;
   picture: string | null;
-  provider: 'google' | 'microsoft';
+  provider: 'google';
   provider_sub: string;
   theme: ThemePreference;
   created_at?: string;
@@ -45,7 +45,7 @@ export async function ensureUsersSchema() {
           email         TEXT NOT NULL UNIQUE,
           name          TEXT NOT NULL,
           picture       TEXT,
-          provider      TEXT NOT NULL CHECK (provider IN ('google', 'microsoft')),
+          provider      TEXT NOT NULL CHECK (provider IN ('google')),
           provider_sub  TEXT NOT NULL,
           theme         TEXT NOT NULL DEFAULT 'modern'
                           CHECK (theme IN ('signal', 'modern')),

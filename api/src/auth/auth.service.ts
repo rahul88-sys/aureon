@@ -1,12 +1,7 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { env } from '../env';
-import type {
-  AuthUser,
-  GoogleProfile,
-  MicrosoftProfile,
-  ThemePreference,
-} from './auth.types';
+import type { AuthUser, GoogleProfile, ThemePreference } from './auth.types';
 import { UsersService } from './users.service';
 
 export type JwtPayload = {
@@ -14,7 +9,7 @@ export type JwtPayload = {
   email: string;
   name: string;
   picture?: string;
-  provider: 'google' | 'microsoft';
+  provider: 'google';
   theme: ThemePreference;
 };
 
@@ -29,17 +24,13 @@ export class AuthService {
     return this.users.upsertFromGoogle(profile);
   }
 
-  validateMicrosoftUser(profile: MicrosoftProfile): Promise<AuthUser> {
-    return this.users.upsertFromMicrosoft(profile);
-  }
-
   signToken(user: AuthUser): string {
     const payload: JwtPayload = {
       sub: user.id,
       email: user.email,
       name: user.name,
       picture: user.picture,
-      provider: user.provider,
+      provider: 'google',
       theme: user.theme || 'modern',
     };
     return this.jwt.sign(payload);
@@ -58,7 +49,7 @@ export class AuthService {
       email: payload.email,
       name: payload.name,
       picture: payload.picture,
-      provider: payload.provider === 'microsoft' ? 'microsoft' : 'google',
+      provider: 'google',
       theme: payload.theme === 'signal' ? 'signal' : 'modern',
     };
   }
